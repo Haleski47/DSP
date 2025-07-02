@@ -256,4 +256,8 @@ $$
 FeedbackQuantError=Y^{fix}-Y^{float}=(\frac{\Sigma{b}}{\Sigma{a}+\delta_{y}}-\frac{\Sigma{b}}{\Sigma{a}})=\frac{\Sigma{a}\Sigma{b}-\Sigma{a}\Sigma{b}-\Sigma{b}\delta_{y}}{(\Sigma{a}+\delta_{y})\Sigma{a}}=\frac{\delta_{y}}{\Sigma{b}+\delta_{y}}=\frac{\delta_{y}}{\Sigma{b}}=\frac{2 ^ {-r_b}}{\Sigma{b}}
 $$
 
-实际测试下，在频率变化时，该量化误差保持稳定。
+#### 2.6.3 多级模块级联引入输入量化误差
+$$
+FeedbackQuantError=Y^{fix}-Y^{float}=\frac{\Sigma{b}\delta_{x}}{\Sigma{a}}=\delta_{x}
+$$
+即输出的量化误差为输入的量化误差的直传，无增益。
