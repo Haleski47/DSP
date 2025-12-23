@@ -276,3 +276,346 @@ $$
 FeedbackQuantError=Y^{fix}-Y^{float}=\frac{\Sigma{b}\delta_{x}}{\Sigma{a}}=\delta_{x}
 $$
 即输出的量化误差为输入的量化误差的直传，无增益。
+
+# 谐振相关理论补充：
+> 从 **二阶 IIR 极点结构** 出发，严格推导  
+> **离散振荡频率（极点角度）θ 与 频率响应谐振峰值出现位置之间的关系**，  
+> 并解释为什么工程中常说  
+> **“谐振频率 ≈ θ”**。
+
+---
+
+## 1. 二阶 IIR 的极点形式
+
+只考虑极点（分子先忽略）：
+
+\[
+H(z)=\frac{1}{1-2r\cos\theta\,z^{-1}+r^2 z^{-2}}
+\]
+
+对应极点为：
+
+\[
+\boxed{z_{1,2}=r e^{\pm j\theta}}
+\]
+
+其中：
+
+- \(r\)：极点半径（阻尼、Q 值）
+- \(\theta\)：极点角度（离散角频率）
+
+---
+
+## 2. 在单位圆上计算频率响应
+
+频率响应定义为：
+
+\[
+H(e^{j\omega})=H(z)\big|_{z=e^{j\omega}}
+\]
+
+代入得：
+
+\[
+H(e^{j\omega})
+=\frac{1}{1-2r\cos\theta\,e^{-j\omega}+r^2 e^{-j2\omega}}
+\]
+
+---
+
+## 3. 分母的几何分解（关键步骤）
+
+分母可以因式分解为：
+
+\[
+1-2r\cos\theta z^{-1}+r^2 z^{-2}=(1-r e^{j\theta}z^{-1})(1-r e^{-j\theta}z^{-1})
+\]
+
+令 \(z=e^{j\omega}\)：
+
+\[
+D(\omega)
+=(1-r e^{-j(\omega-\theta)})(1-r e^{-j(\omega+\theta)})
+\]
+
+---
+
+## 4. 幅度平方表达式
+
+利用恒等式：
+
+\[
+|1-r e^{-jx}|^2 = 1+r^2-2r\cos x
+\]
+
+得到：
+
+\[
+\boxed{
+|H(e^{j\omega})|^2 =\frac{1}{
+(1+r^2-2r\cos(\omega-\theta))\;
+(1+r^2-2r\cos(\omega+\theta))
+}
+}
+\]
+
+### 物理解释
+
+- 频率响应是在 **单位圆** 上扫频
+- 分母两项分别表示单位圆点到两个共轭极点方向的“距离函数”
+- **幅度最大 ⇔ 分母最小 ⇔ 单位圆最接近极点**
+
+---
+
+## 5. 谐振频率的数学定义
+
+谐振频率 \(\omega_{\text{peak}}\) 定义为：
+
+\[
+\omega_{\text{peak}}=\arg\max_\omega |H(e^{j\omega})|
+\]
+
+等价于最小化分母：
+
+\[
+P(\omega)=(1+r^2-2r\cos(\omega-\theta))\;(1+r^2-2r\cos(\omega+\theta))
+\]
+
+---
+
+## 6. 极值条件推导（结果）
+
+对 \(\ln P(\omega)\) 求导并令其为 0，可得到解析解：
+
+\[
+\boxed{\cos\omega_{\text{peak}}=\frac{(1+r^2)\cos\theta}{2r}}
+\]
+
+因此谐振频率为：
+
+\[
+\boxed{
+\omega_{\text{peak}}=\arccos\!\left(\frac{(1+r^2)\cos\theta}{2r}\right)
+}
+\]
+
+这是 **严格的数学结果**。
+
+---
+
+## 7. 为什么工程上常说“谐振频率 ≈ θ”？
+
+当极点靠近单位圆（高 Q）：
+
+\[
+r \rightarrow 1
+\]
+
+则：
+
+\[
+\frac{1+r^2}{2r} \rightarrow 1
+\]
+
+从而：
+
+\[
+\cos\omega_{\text{peak}} \approx \cos\theta
+\quad\Rightarrow\quad
+\boxed{\omega_{\text{peak}} \approx \theta}
+\]
+
+### 几何直觉
+
+- 当 \(r\) 接近 1 时，极点几乎贴着单位圆
+- 单位圆在 \(\omega=\theta\) 方向上最接近极点
+- 幅度峰值自然出现在该角度附近
+
+---
+
+## 11. Q 与极点半径 r 的近似关系：\(Q \approx \dfrac{1}{2(1-r)}\) 怎么来的？
+
+> 这一节推导一个**常用工程估计**：当极点很靠近单位圆（\(r\approx 1\)，窄带谐振、高 Q）时，
+> \[
+> Q \approx \frac{1}{2(1-r)}
+> \]
+> 更精确一点（带上中心频率）：
+> \[
+> \boxed{Q \approx \frac{\omega_0}{2(1-r)} \quad\text{其中}\ \omega_0\approx \theta}
+> \]
+> 许多场景把 \(\omega_0\) 视作“量级常数”（例如归一化到 1 rad/sample 或者只做数量级估计），就得到 \(Q\approx 1/[2(1-r)]\)。
+
+---
+
+### 11.1 从“谐振器极点”出发
+
+二阶谐振器（忽略分子）：
+\[
+H(z)=\frac{1}{1-2r\cos\theta\,z^{-1}+r^2 z^{-2}}
+\]
+极点：
+\[
+z_{1,2}=re^{\pm j\theta}
+\]
+
+频率响应（单位圆 \(z=e^{j\omega}\)）的幅度平方（前文已得）：
+\[
+|H(e^{j\omega})|^2=
+\frac{1}{
+(1+r^2-2r\cos(\omega-\theta))\;
+(1+r^2-2r\cos(\omega+\theta))
+}
+\]
+
+---
+
+### 11.2 窄带谐振的关键近似：只看“靠近 \(\omega=\theta\)”的那一项
+
+当 \(\omega\) 在 \(\theta\) 附近（设 \(\Delta=\omega-\theta\) 很小），第一项
+\[
+A(\Delta)=1+r^2-2r\cos(\Delta)
+\]
+会变得非常小（主导峰值），而第二项
+\[
+B(\omega)=1+r^2-2r\cos(\omega+\theta)
+\]
+在 \(\omega\approx \theta\) 附近变化相对较慢，可近似视为常数。
+
+因此，在峰值附近有近似：
+\[
+|H(e^{j\omega})|^2 \propto \frac{1}{A(\Delta)}
+\]
+
+---
+
+### 11.3 用小角度展开把 \(A(\Delta)\) 变成“标准二次形式”
+
+小角度近似：
+\[
+\cos(\Delta)\approx 1-\frac{\Delta^2}{2}
+\]
+
+代入：
+\[
+\begin{aligned}
+A(\Delta)
+&=1+r^2-2r\left(1-\frac{\Delta^2}{2}\right) \\
+&=(1-r)^2 + r\Delta^2
+\end{aligned}
+\]
+
+所以峰值附近：
+\[
+|H(e^{j\omega})|^2 \propto \frac{1}{(1-r)^2+r\Delta^2}
+\]
+
+---
+
+### 11.4 用 3 dB 带宽定义 BW，得到 \(\text{BW}\approx 2(1-r)\)
+
+峰值在 \(\Delta=0\)：
+\[
+A(0)=(1-r)^2
+\]
+
+3 dB 点定义为功率减半（幅度平方减半）：
+\[
+\frac{1}{A(\Delta_{3\text{dB}})}=\frac{1}{2}\cdot\frac{1}{A(0)}
+\quad\Rightarrow\quad
+A(\Delta_{3\text{dB}})=2A(0)=2(1-r)^2
+\]
+
+带入 \(A(\Delta)=(1-r)^2+r\Delta^2\)：
+\[
+(1-r)^2+r\Delta_{3\text{dB}}^2=2(1-r)^2
+\Rightarrow
+r\Delta_{3\text{dB}}^2=(1-r)^2
+\]
+
+因此：
+\[
+\Delta_{3\text{dB}}=\frac{1-r}{\sqrt{r}}\approx (1-r)\quad (r\approx 1)
+\]
+
+3 dB **全带宽**（两侧）为：
+\[
+\boxed{\text{BW}\approx 2\Delta_{3\text{dB}}\approx 2(1-r)}
+\]
+这里 BW 的单位是 **rad/sample**。
+
+---
+
+### 11.5 用 Q 的定义得到 \(Q\) 与 \(r\) 的关系
+
+窄带系统常用定义：
+\[
+\boxed{Q=\frac{\omega_0}{\text{BW}}}
+\]
+
+对二阶谐振器，中心角频率近似：
+\[
+\omega_0 \approx \theta
+\]
+
+代入 BW 近似：
+\[
+\boxed{
+Q \approx \frac{\omega_0}{2(1-r)} \approx \frac{\theta}{2(1-r)}
+}
+\]
+
+---
+
+### 11.6 为什么很多资料写成 \(Q \approx \dfrac{1}{2(1-r)}\)？
+
+这是进一步做了“量级/归一化”简化的版本，常见原因包括：
+
+- 把 \(\omega_0\) 视为 O(1)（比如在中频段 \(\theta\) 不太小、不太靠近 \(\pi\)）做工程估计；
+- 或者在特定设计/归一化中默认 \(\omega_0\approx 1\) rad/sample；
+- 或者只关心“\(r\) 越接近 1，Q 越大”的尺度关系。
+
+因此常见简式：
+\[
+\boxed{Q \approx \frac{1}{2(1-r)}\quad (r\approx 1,\ \text{窄带估计})}
+\]
+
+---
+
+### 11.7 适用条件（很重要）
+
+上述推导依赖：
+
+- \(r\) 很接近 1（高 Q、窄带）
+- 在峰值附近用小角度近似（\(|\Delta| \ll 1\)）
+- 分母中另一项在峰值附近变化较慢（可当常数）
+
+若 \(r\) 不接近 1（宽带），或 \(\theta\) 非常靠近 0 / \(\pi\)，则该近似会变差，建议用精确频响数值法求带宽与 Q。
+
+
+## 8. θ、r、谐振的角色分工总结
+
+| 参数 | 决定的物理量 |
+|----|------------|
+| \(\theta\) | 谐振中心频率（位置） |
+| \(r\) | 谐振强度、Q 值、带宽 |
+| \(r \to 1\) | 尖锐谐振，峰值频率 ≈ θ |
+| \(r\) 小 | 强阻尼，峰值偏移或不明显 |
+
+---
+
+## 9. 换算为实际频率（Hz）
+
+若采样率为 \(F_s\)，则：
+
+\[
+\boxed{
+f_{\text{peak}} = \frac{\omega_{\text{peak}}}{2\pi}\,F_s
+}
+\]
+
+---
+
+## 10. 一句话终极总结
+
+> **二阶 IIR 中，极点角度 θ 决定系统“想振”的方向；  
+> 当阻尼较小（r≈1）时，频率响应的谐振峰值就出现在 θ 附近。**
